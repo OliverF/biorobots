@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+		<title>Hermit, crab!</title>
+
+		<!-- Bootstrap -->
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<style>
+		.row {
+			margin: 30px 0;
+		}
+		.btn-lg {
+			font-size: 25px;
+			width: 65px;
+			height: 65px;
+		}
+		</style>
+
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class="container">
+			<div class="page-header">
+				<h1>Hermit, crab!</h1>
+				<p class="lead">This is the Bluetooth control interface for the Hermit crab.</p>
+			</div>
+
+			<div class="row">
+				<div class="col-md-6">
+					<h3>Movement</h3>
+					<p>Use the arrow keys to control the movement of the robot.</p>
+					<div class="row">
+						<div class="col-xs-2"></div>
+						<div class="col-xs-2">
+							<button type="button" id="ctl-ru" class="btn btn-default btn-lg" aria-label="Robot Up">
+								<span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+							</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-2">
+							<button type="button" id="ctl-rl" class="btn btn-default btn-lg" aria-label="Robot Left">
+								<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+							</button>
+						</div>
+						<div class="col-xs-2">
+							<button type="button" id="ctl-rd" class="btn btn-default btn-lg" aria-label="Robot Down">
+								<span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+							</button>
+						</div>
+						<div class="col-xs-2">
+							<button type="button" id="ctl-rr" class="btn btn-default btn-lg" aria-label="Robot Right">
+								<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-6">
+					<h3>Gripping</h3>
+					<p>Use the WASD keys to control the gripper.</p>
+					<div class="row">
+						<div class="col-xs-2"></div>
+						<div class="col-xs-2">
+							<button type="button" id="ctl-gu" class="btn btn-default btn-lg" aria-label="Gripper Up">
+								W
+							</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-2">
+							<button type="button" id="ctl-gl" class="btn btn-default btn-lg" aria-label="Gripper Left">
+								A
+							</button>
+						</div>
+						<div class="col-xs-2">
+							<button type="button" id="ctl-gd" class="btn btn-default btn-lg" aria-label="Gripper Down">
+								S
+							</button>
+						</div>
+						<div class="col-xs-2">
+							<button type="button" id="ctl-gr" class="btn btn-default btn-lg" aria-label="Gripper Right">
+								D
+							</button>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+		<!-- Include all compiled plugins (below), or include individual files as needed -->
+		<script src="js/bootstrap.min.js"></script>
+
+		<!-- socket.IO stuff -->
+		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+
+		</script>
+
+		<!-- Command handlers (keypresses and button presses) -->
+		<script language="JavaScript">
+		keymap = {
+			"37":"#ctl-rl",
+			"38":"#ctl-ru",
+			"39":"#ctl-rr",
+			"40":"#ctl-rd",
+			"65":"#ctl-gl",
+			"68":"#ctl-gr",
+			"83":"#ctl-gd",
+			"87":"#ctl-gu"
+		};
+
+		var socket = io.connect('http://' + document.domain + ':' + '5000');
+			
+		function sendCmd(cmd) {
+			socket.emit('command', cmd)
+		}
+
+		$(".btn").click(function() {
+			sendCmd(this.id);
+		});
+
+		$("body").keydown(function(e) {
+			if (!$(keymap[e.keyCode]).hasClass("active"))
+				$(keymap[e.keyCode]).addClass("active").trigger("click");
+		});
+
+		$("body").keyup(function(e) {
+			$(keymap[e.keyCode]).removeClass("active");
+		});
+
+		</script>
+
+	</body>
+</html>
