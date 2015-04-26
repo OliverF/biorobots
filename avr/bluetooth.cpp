@@ -60,5 +60,6 @@ int bluetooth::checkAndExecuteCommand()
 
 void bluetooth::clearCommandBuffer()
 {
-	memset(bluetooth::commandBuffer,0,sizeof(bluetooth::commandBuffer));
+	memset(bluetooth::commandBuffer, 0, sizeof(bluetooth::commandBuffer));
+	currentCommandIndex = 0;
 }
