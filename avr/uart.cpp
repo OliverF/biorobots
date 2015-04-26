@@ -33,6 +33,21 @@ void uart::transmitPacket(unsigned char data[], unsigned int size)
 		uart::transmitByte(data[i]);
 }
 
+void uart::transmitString(unsigned char* data)
+{
+	uint32_t i = 0;
+	
+	while(data[i] != '\0')
+	{
+		uart::transmitByte(data[i++]);
+	}
+}
+
+void uart::transmitString(const char* data)
+{
+	uart::transmitString((unsigned char*)data);
+}
+
 unsigned char uart::receiveByte(void)
 {
 	// wait for data to be received
