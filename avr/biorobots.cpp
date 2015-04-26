@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include "bluetooth.hpp"
+#include "uart.hpp"
 
 void driveUp()
 {
@@ -44,6 +45,10 @@ void gripperRight()
 
 int main(void)
 {
+	bluetooth::init();
+	
+	uart::transmitString("Initialized\r\n");
+	
 	bluetooth::registerCommandCallback("ctl-ru", driveUp);
 	bluetooth::registerCommandCallback("ctl-rd", driveDown);
 	bluetooth::registerCommandCallback("ctl-rl", driveLeft);
@@ -53,5 +58,8 @@ int main(void)
 	bluetooth::registerCommandCallback("ctl-gl", gripperLeft);
 	bluetooth::registerCommandCallback("ctl-gr", gripperRight);
 	
-	while(true){ }
+	while(true)
+	{
+		bluetooth::process();
+	}
 }
