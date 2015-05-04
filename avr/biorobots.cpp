@@ -1,6 +1,7 @@
 #define F_CPU 8000000UL
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <stdio.h>
 #include <util/delay.h>
 #include <stdlib.h>
@@ -14,7 +15,16 @@
 #define DIR_NO 0
 
 #define VMAX 3.3f
-#define VGRIPTHRESHOLD 1.5f
+#define V_GRIP_THRESHOLD 1.5f
+
+#define TIMEOUT_OVERFLOW_LIMIT 30
+
+volatile uint16_t timeoutOverflowCount = 0;
+
+void resetTimeout()
+{
+	timeoutOverflowCount = 0;
+}
 
 uint16_t readADC(uint8_t channel)
 {
@@ -36,7 +46,7 @@ uint16_t readADC(uint8_t channel)
 bool isGripperGripping()
 {
 	float result = VMAX*((float)readADC(PA0)/1024);
-	return (result > VGRIPTHRESHOLD);
+	return (result > V_GRIP_THRESHOLD);
 }
 
 void setGripperMotor(int direction)
@@ -60,6 +70,8 @@ void setGripperMotor(int direction)
 
 void setTankDrive(float powerL, float powerR)
 {
+	resetTimeout();
+	
 	int dirL = 0;
 	int dirR = 0;
 	
@@ -107,6 +119,20 @@ void setTankDrive(float powerL, float powerR)
 	{
 		OCR2A = 0;
 		OCR2B = npowerB;
+	}
+}
+
+ISR(TIMER0_OVF_vect)
+{
+	timeoutOverflowCount++;
+	
+	if (timeoutOverflowCount >= TIMEOUT_OVERFLOW_LIMIT)
+	{
+		//timed out, stop driving
+		setTankDrive(0, 0);
+		
+		//reset overflow timer
+		timeoutOverflowCount = 0;
 	}
 }
 
@@ -221,6 +247,19 @@ void initPWM()
 	TCCR2B |= (1 << CS21);
 }
 
+void initTimeout()
+{
+	//enable overflow interrupt timer 0 (8 bit)
+	TIMSK0 = (1 << TOIE0);
+	//reset timer
+	TCNT0 = 0x00;
+	//1024 prescaler:
+	//8000000/(1024*255) = ~30 ticks per second
+	TCCR0B = (1 << CS02) | (1 << CS00);
+	//enable global interrupts
+	sei();
+}
+
 void init()
 {
 	//Gripper motor
@@ -237,6 +276,7 @@ void init()
 	
 	initPWM();
 	initADC();
+	initTimeout();
 	
 	bluetooth::init();
 }
