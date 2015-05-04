@@ -183,6 +183,8 @@ void driveStop()
 
 void gripperClose()
 {
+	setTankDrive(0, 0);
+	
 	setGripperMotor(DIR_FW);
 	
 	_delay_ms(200);
@@ -194,6 +196,8 @@ void gripperClose()
 
 void gripperOpen()
 {
+	setTankDrive(0, 0);
+	
 	setGripperMotor(DIR_BW);
 	
 	_delay_ms(200);
