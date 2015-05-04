@@ -91,32 +91,50 @@ void setTankDrive(float powerL, float powerR)
 	
 	if (dirL == 0)
 	{
+		INPUT(DDRB, PB3);
+		INPUT(DDRB, PB4);
+		
 		OCR0A = 0;
 		OCR0B = 0;
 	}
 	else if (dirL >= 0)
 	{
+		OUTPUT(DDRB, PB3);
+		INPUT(DDRB, PB4);
+		
 		OCR0A = npowerA;
 		OCR0B = 0;
 	}
 	else
 	{
+		INPUT(DDRB, PB3);
+		OUTPUT(DDRB, PB4);
+		
 		OCR0A = 0;
 		OCR0B = npowerA;
 	}
 	
 	if (dirR == 0)
 	{
+		INPUT(DDRD, PIND7);
+		INPUT(DDRD, PIND6);
+		
 		OCR2A = 0;
 		OCR2B = 0;
 	}
 	else if (dirR >= 0)
 	{
+		OUTPUT(DDRD, PIND7);
+		INPUT(DDRD, PIND6);
+		
 		OCR2A = npowerB;
 		OCR2B = 0;
 	}
 	else
 	{
+		INPUT(DDRD, PIND7);
+		OUTPUT(DDRD, PIND6);
+		
 		OCR2A = 0;
 		OCR2B = npowerB;
 	}
