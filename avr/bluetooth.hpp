@@ -5,13 +5,13 @@
 
 struct commandMapping
 {
-	char command[20];
+	char* command;
 	commandCallback callback;
 	
 	commandMapping(char* command, commandCallback callback)
 	{
-		command = command;
-		callback = callback;
+		this->command = command;
+		this->callback = callback;
 	}
 };
 
