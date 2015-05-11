@@ -9,23 +9,23 @@ from sys import exit
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Open therial connection with Bluetooth devithe
-print "Connecting to crab via Bluetooth..."
-try:
-	s = serial.Serial(port='/dev/tty.HC-06-DevB',baudrate=9600,timeout=1)
-except Exception, e:
-	print "Bluetooth connection failed with error:", e
-	exit()
+# # Open therial connection with Bluetooth devithe
+# print "Connecting to crab via Bluetooth..."
+# try:
+# 	s = serial.Serial(port='/dev/tty.HC-06-DevB',baudrate=9600,timeout=1)
+# except Exception, e:
+# 	print "Bluetooth connection failed with error:", e
+# 	exit()
 
-print "Bluetooth connection successful."
+# print "Bluetooth connection successful."
 
-# Register cleanup
-def cleanup():
-	if s:
-		s.close()
-		print "Bluetooth connection closed."
+# # Register cleanup
+# def cleanup():
+# 	if s:
+# 		s.close()
+# 		print "Bluetooth connection closed."
 
-atexit.register(cleanup)
+# atexit.register(cleanup)
 
 @app.route('/<path:filename>')
 def serveFile(filename):
@@ -41,7 +41,7 @@ def index():
 @socketio.on('command')
 def test_message(message):
 	print message
-	s.write(str(message))
+	# s.write(str(message))
 
 if __name__ == '__main__':
 	socketio.run(app)

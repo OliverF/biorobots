@@ -108,9 +108,6 @@
 
 		<!-- socket.IO stuff -->
 		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-		<script type="text/javascript" charset="utf-8">
-
-		</script>
 
 		<!-- Command handlers (keypresses and button presses) -->
 		<script language="JavaScript">
@@ -123,23 +120,78 @@
 			"82":"#ctl-gc"
 		};
 
-		var socket = io.connect('http://' + document.domain + ':' + '5000');
-			
-		function sendCmd(cmd) {
-			socket.emit('command', cmd)
+		var active = false;
+		var keys = new Set();
+		var repeater;
+
+		function sendCmd() {
+			//if (!active)
+			//	return false;
+
+			if (keys.size == 1)
+			{
+				if (keys.has(38))
+					socket.emit('command', 'ctl-du');
+				else if (keys.has(37))
+					socket.emit('command', 'ctl-dl');
+				else if (keys.has(39))
+					socket.emit('command', 'ctl-dr');
+				else if (keys.has(40))
+					socket.emit('command', 'ctl-dd');
+				else if (keys.has(71))
+					socket.emit('command', 'ctl-go');
+				else if (keys.has(82))
+					socket.emit('command', 'ctl-gc');
+			}
+			else if (keys.has(38) && keys.has(37))
+				socket.emit('command', 'ctl-dul');
+			else if (keys.has(38) && keys.has(39))
+				socket.emit('command', 'ctl-dur');
+			else if (keys.has(40) && keys.has(37))
+				socket.emit('command', 'ctl-ddl');
+			else if (keys.has(40) && keys.has(39))
+				socket.emit('command', 'ctl-ddr');
 		}
 
+		var socket = io.connect('http://' + document.domain + ':' + '5000');
+			
 		$(".btn").click(function() {
-			sendCmd(this.id);
+			var cmd = this.id;
+			sendCmd();
+			console.log(cmd);
+			if (cmd != 'ctl-gc' && cmd != 'ctl-go' && !active)
+				repeater = setInterval(sendCmd, 500);
+			active = true;
 		});
 
 		$("body").keydown(function(e) {
-			if (!$(keymap[e.keyCode]).hasClass("active"))
+			if (e.keyCode in keymap && !$(keymap[e.keyCode]).hasClass("active"))
+			{
+				keys.add(e.keyCode);
 				$(keymap[e.keyCode]).addClass("active").trigger("click");
+				//console.log(keys.values())
+			}
 		});
 
 		$("body").keyup(function(e) {
-			$(keymap[e.keyCode]).removeClass("active");
+			if (keys.has(e.keyCode))
+			{
+				keys.delete(e.keyCode);
+				$(keymap[e.keyCode]).removeClass("active");
+
+				var cmd = keymap[e.keyCode];
+
+				if (keys.size == 0)
+				{
+					if (cmd != '#ctl-gc' && cmd != '#ctl-go')
+					{
+						clearInterval(repeater);
+						socket.emit('command', 'ctl-ds');
+					}
+					active = false;
+
+				}
+			}
 		});
 
 		</script>
