@@ -157,7 +157,7 @@
 			sendCmd();
 			console.log(cmd);
 			if (cmd != 'ctl-cl' && cmd != 'ctl-op' && !active)
-				repeater = setInterval(sendCmd, 500);
+				repeater = setInterval(sendCmd, 100);
 			active = true;
 		});
 

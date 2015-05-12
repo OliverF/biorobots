@@ -41,7 +41,7 @@ def index():
 @socketio.on('command')
 def test_message(message):
 	print message
-	s.write(str(message))
+	s.write(str(message) + '\r\n')
 
 if __name__ == '__main__':
 	socketio.run(app)
