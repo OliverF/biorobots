@@ -75,23 +75,23 @@
 					<p>Use the G and R keys to open and close the gripper.</p>
 					<div class="row">
 <!-- 						<div class="col-xs-3">
-							<button type="button" id="ctl-go" class="btn btn-default btn-wd" aria-label="Gripper Left">
+							<button type="button" id="ctl-op" class="btn btn-default btn-wd" aria-label="Gripper Left">
 								(G)rip
 							</button>
 						</div>
 						<div class="col-xs-3">
-							<button type="button" id="ctl-gc" class="btn btn-default btn-wd" aria-label="Gripper Down">
+							<button type="button" id="ctl-cl" class="btn btn-default btn-wd" aria-label="Gripper Down">
 								(R)elease
 							</button>
 						</div> -->
 
 						<div class="col-xs-3">
-							<button type="button" id="ctl-go" class="btn btn-default btn-lg" aria-label="Gripper Down">
+							<button type="button" id="ctl-op" class="btn btn-default btn-lg" aria-label="Gripper Down">
 								<span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
 							</button>
 						</div>
 						<div class="col-xs-3">
-							<button type="button" id="ctl-gc" class="btn btn-default btn-lg" aria-label="Gripper Left">
+							<button type="button" id="ctl-cl" class="btn btn-default btn-lg" aria-label="Gripper Left">
 								<span class="glyphicon glyphicon-screenshot" aria-hidden="true"></span>
 							</button>
 						</div>
@@ -116,8 +116,8 @@
 			"38":"#ctl-du",
 			"39":"#ctl-dr",
 			"40":"#ctl-dd",
-			"71":"#ctl-go",
-			"82":"#ctl-gc"
+			"71":"#ctl-op",
+			"82":"#ctl-cl"
 		};
 
 		var active = false;
@@ -136,9 +136,9 @@
 				else if (keys.has(40))
 					socket.emit('command', 'ctl-dd');
 				else if (keys.has(71))
-					socket.emit('command', 'ctl-go');
+					socket.emit('command', 'ctl-op');
 				else if (keys.has(82))
-					socket.emit('command', 'ctl-gc');
+					socket.emit('command', 'ctl-cl');
 			}
 			else if (keys.has(38) && keys.has(37))
 				socket.emit('command', 'ctl-dul');
@@ -156,7 +156,7 @@
 			var cmd = this.id;
 			sendCmd();
 			console.log(cmd);
-			if (cmd != 'ctl-gc' && cmd != 'ctl-go' && !active)
+			if (cmd != 'ctl-cl' && cmd != 'ctl-op' && !active)
 				repeater = setInterval(sendCmd, 500);
 			active = true;
 		});
@@ -180,7 +180,7 @@
 
 				if (keys.size == 0)
 				{
-					if (cmd != '#ctl-gc' && cmd != '#ctl-go')
+					if (cmd != '#ctl-cl' && cmd != '#ctl-op')
 					{
 						clearInterval(repeater);
 						socket.emit('command', 'ctl-ds');
