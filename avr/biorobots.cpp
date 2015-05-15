@@ -15,9 +15,10 @@
 #define DIR_NO 0
 
 #define VMAX 3.3f
-#define V_GRIP_THRESHOLD 1.5f
+#define V_GRIP_THRESHOLD_CLOSE 0.9f
+#define V_GRIP_THRESHOLD_OPEN 0.9f
 
-#define TIMEOUT_OVERFLOW_LIMIT 30
+#define TIMEOUT_OVERFLOW_LIMIT 15
 
 volatile uint16_t timeoutOverflowCount = 0;
 
@@ -43,10 +44,10 @@ uint16_t readADC(uint8_t channel)
 	return ADC;
 }
 
-bool isGripperGripping()
+bool isGripperGripping(float threshold)
 {
 	float result = VMAX*((float)readADC(PA0)/1024);
-	return (result > V_GRIP_THRESHOLD);
+	return (result > threshold);
 }
 
 void setGripperMotor(int direction)
@@ -68,7 +69,7 @@ void setGripperMotor(int direction)
 	}
 }
 
-void setTankDrive(float powerL, float powerR)
+void setTankDrive(double powerL, double powerR)
 {
 	resetTimeout();
 	
@@ -86,8 +87,8 @@ void setTankDrive(float powerL, float powerR)
 	powerR *= dirR;
 	
 	//scale to 0-255
-	int8_t npowerA = (int8_t)floorf(255*powerL);
-	int8_t npowerB = (int8_t)floorf(255*powerR);
+	uint8_t npowerA = (uint8_t)floorf(255*powerL);
+	uint8_t npowerB = (uint8_t)floorf(255*powerR);
 	
 	if (dirL == 0)
 	{
@@ -99,19 +100,19 @@ void setTankDrive(float powerL, float powerR)
 	}
 	else if (dirL >= 0)
 	{
-		OUTPUT(DDRB, PB3);
-		INPUT(DDRB, PB4);
-		
-		OCR0A = npowerA;
-		OCR0B = 0;
-	}
-	else
-	{
 		INPUT(DDRB, PB3);
 		OUTPUT(DDRB, PB4);
 		
 		OCR0A = 0;
 		OCR0B = npowerA;
+	}
+	else
+	{
+		OUTPUT(DDRB, PB3);
+		INPUT(DDRB, PB4);
+		
+		OCR0A = npowerA;
+		OCR0B = 0;
 	}
 	
 	if (dirR == 0)
@@ -140,7 +141,7 @@ void setTankDrive(float powerL, float powerR)
 	}
 }
 
-ISR(TIMER0_OVF_vect)
+ISR(TIMER1_OVF_vect)
 {
 	timeoutOverflowCount++;
 	
@@ -166,22 +167,22 @@ void driveDown()
 
 void driveLeft()
 {
-	setTankDrive(0, 1);
+	setTankDrive(-1, 1);
 }
 
 void driveRight()
 {
-	setTankDrive(1, 0);
+	setTankDrive(1, -1);
 }
 
 void driveUpRight()
 {
-	setTankDrive(1, 0.5);
+	setTankDrive(1, 0.7);
 }
 
 void driveUpLeft()
 {
-	setTankDrive(0.5, 1);
+	setTankDrive(0.7, 1);
 }
 
 void driveDownRight()
@@ -205,9 +206,9 @@ void gripperClose()
 	
 	setGripperMotor(DIR_FW);
 	
-	_delay_ms(200);
+	_delay_ms(500);
 	
-	while(!isGripperGripping());
+	while(!isGripperGripping(V_GRIP_THRESHOLD_CLOSE));
 	
 	setGripperMotor(DIR_NO);
 }
@@ -218,9 +219,9 @@ void gripperOpen()
 	
 	setGripperMotor(DIR_BW);
 	
-	_delay_ms(200);
+	_delay_ms(500);
 	
-	while(!isGripperGripping());
+	while(!isGripperGripping(V_GRIP_THRESHOLD_OPEN)){}
 	
 	setGripperMotor(DIR_NO);
 }
@@ -245,6 +246,7 @@ void initPWM()
 	
 	//set non-inverting mode
 	TCCR0A |= (1 << COM0A1);
+	TCCR0A |= (1 << COM0B1); // Workaround: http://electronics.stackexchange.com/questions/97596/attiny85-pwm-why-does-com1a0-need-to-be-set-before-pwm-b-will-work
 	
 	//fast PWM mode
 	TCCR0A |= (1 << WGM01) | (1 << WGM00);
@@ -261,6 +263,7 @@ void initPWM()
 		
 	//set non-inverting mode
 	TCCR2A |= (1 << COM2A1);
+	TCCR2A |= (1 << COM2B1);
 		
 	//fast PWM mode
 	TCCR2A |= (1 << WGM21) | (1 << WGM20);
@@ -272,12 +275,12 @@ void initPWM()
 void initTimeout()
 {
 	//enable overflow interrupt timer 0 (8 bit)
-	TIMSK0 = (1 << TOIE0);
+	TIMSK1 = (1 << TOIE1);
 	//reset timer
-	TCNT0 = 0x00;
+	TCNT1 = 0x00;
 	//1024 prescaler:
-	//8000000/(1024*255) = ~30 ticks per second
-	TCCR0B = (1 << CS02) | (1 << CS00);
+	//8000000/(8*65536) = ~15 ticks per second
+	TCCR1B = (1 << CS11);
 	//enable global interrupts
 	sei();
 }
@@ -325,8 +328,6 @@ int main(void)
 	bluetooth::registerCommandCallback("ctl-op\r\n", gripperOpen);
 	
 	uart::transmitString("Closing gripper...\r\n");
-	
-	gripperClose();
 	
 	uart::transmitString("Gripper closed\r\n");
 	
