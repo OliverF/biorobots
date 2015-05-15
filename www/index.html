@@ -18,6 +18,11 @@
 			width: 65px;
 			height: 65px;
 		}
+		.btn-wd {
+			font-size: 25px;
+
+			height: 65px;
+		}
 		</style>
 
 		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -41,24 +46,24 @@
 					<div class="row">
 						<div class="col-xs-2"></div>
 						<div class="col-xs-2">
-							<button type="button" id="ctl-ru" class="btn btn-default btn-lg" aria-label="Robot Up">
+							<button type="button" id="ctl-du" class="btn btn-default btn-lg" aria-label="Robot Up">
 								<span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
 							</button>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col-xs-2">
-							<button type="button" id="ctl-rl" class="btn btn-default btn-lg" aria-label="Robot Left">
+							<button type="button" id="ctl-dl" class="btn btn-default btn-lg" aria-label="Robot Left">
 								<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
 							</button>
 						</div>
 						<div class="col-xs-2">
-							<button type="button" id="ctl-rd" class="btn btn-default btn-lg" aria-label="Robot Down">
+							<button type="button" id="ctl-dd" class="btn btn-default btn-lg" aria-label="Robot Down">
 								<span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
 							</button>
 						</div>
 						<div class="col-xs-2">
-							<button type="button" id="ctl-rr" class="btn btn-default btn-lg" aria-label="Robot Right">
+							<button type="button" id="ctl-dr" class="btn btn-default btn-lg" aria-label="Robot Right">
 								<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
 							</button>
 						</div>
@@ -67,29 +72,27 @@
 
 				<div class="col-md-6">
 					<h3>Gripping</h3>
-					<p>Use the WASD keys to control the gripper.</p>
+					<p>Use the G and R keys to open and close the gripper.</p>
 					<div class="row">
-						<div class="col-xs-2"></div>
-						<div class="col-xs-2">
-							<button type="button" id="ctl-gu" class="btn btn-default btn-lg" aria-label="Gripper Up">
-								W
+<!-- 						<div class="col-xs-3">
+							<button type="button" id="ctl-op" class="btn btn-default btn-wd" aria-label="Gripper Left">
+								(G)rip
 							</button>
 						</div>
-					</div>
-					<div class="row">
-						<div class="col-xs-2">
-							<button type="button" id="ctl-gl" class="btn btn-default btn-lg" aria-label="Gripper Left">
-								A
+						<div class="col-xs-3">
+							<button type="button" id="ctl-cl" class="btn btn-default btn-wd" aria-label="Gripper Down">
+								(R)elease
+							</button>
+						</div> -->
+
+						<div class="col-xs-3">
+							<button type="button" id="ctl-op" class="btn btn-default btn-lg" aria-label="Gripper Down">
+								<span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
 							</button>
 						</div>
-						<div class="col-xs-2">
-							<button type="button" id="ctl-gd" class="btn btn-default btn-lg" aria-label="Gripper Down">
-								S
-							</button>
-						</div>
-						<div class="col-xs-2">
-							<button type="button" id="ctl-gr" class="btn btn-default btn-lg" aria-label="Gripper Right">
-								D
+						<div class="col-xs-3">
+							<button type="button" id="ctl-cl" class="btn btn-default btn-lg" aria-label="Gripper Left">
+								<span class="glyphicon glyphicon-screenshot" aria-hidden="true"></span>
 							</button>
 						</div>
 					</div>
@@ -105,40 +108,87 @@
 
 		<!-- socket.IO stuff -->
 		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-		<script type="text/javascript" charset="utf-8">
-
-		</script>
 
 		<!-- Command handlers (keypresses and button presses) -->
 		<script language="JavaScript">
 		keymap = {
-			"37":"#ctl-rl",
-			"38":"#ctl-ru",
-			"39":"#ctl-rr",
-			"40":"#ctl-rd",
-			"65":"#ctl-gl",
-			"68":"#ctl-gr",
-			"83":"#ctl-gd",
-			"87":"#ctl-gu"
+			"37":"#ctl-dl",
+			"38":"#ctl-du",
+			"39":"#ctl-dr",
+			"40":"#ctl-dd",
+			"71":"#ctl-op",
+			"82":"#ctl-cl"
 		};
+
+		var active = false;
+		var keys = new Set();
+		var repeater;
+
+		function sendCmd() {
+			if (keys.size == 1)
+			{
+				if (keys.has(38))
+					socket.emit('command', 'ctl-du');
+				else if (keys.has(37))
+					socket.emit('command', 'ctl-dl');
+				else if (keys.has(39))
+					socket.emit('command', 'ctl-dr');
+				else if (keys.has(40))
+					socket.emit('command', 'ctl-dd');
+				else if (keys.has(71))
+					socket.emit('command', 'ctl-op');
+				else if (keys.has(82))
+					socket.emit('command', 'ctl-cl');
+			}
+			else if (keys.has(38) && keys.has(37))
+				socket.emit('command', 'ctl-dul');
+			else if (keys.has(38) && keys.has(39))
+				socket.emit('command', 'ctl-dur');
+			else if (keys.has(40) && keys.has(37))
+				socket.emit('command', 'ctl-ddl');
+			else if (keys.has(40) && keys.has(39))
+				socket.emit('command', 'ctl-ddr');
+		}
 
 		var socket = io.connect('http://' + document.domain + ':' + '5000');
 			
-		function sendCmd(cmd) {
-			socket.emit('command', cmd)
-		}
-
 		$(".btn").click(function() {
-			sendCmd(this.id);
+			var cmd = this.id;
+			sendCmd();
+			console.log(cmd);
+			if (cmd != 'ctl-cl' && cmd != 'ctl-op' && !active)
+				repeater = setInterval(sendCmd, 100);
+			active = true;
 		});
 
 		$("body").keydown(function(e) {
-			if (!$(keymap[e.keyCode]).hasClass("active"))
+			if (e.keyCode in keymap && !$(keymap[e.keyCode]).hasClass("active"))
+			{
+				keys.add(e.keyCode);
 				$(keymap[e.keyCode]).addClass("active").trigger("click");
+				//console.log(keys.values())
+			}
 		});
 
 		$("body").keyup(function(e) {
-			$(keymap[e.keyCode]).removeClass("active");
+			if (keys.has(e.keyCode))
+			{
+				keys.delete(e.keyCode);
+				$(keymap[e.keyCode]).removeClass("active");
+
+				var cmd = keymap[e.keyCode];
+
+				if (keys.size == 0)
+				{
+					if (cmd != '#ctl-cl' && cmd != '#ctl-op')
+					{
+						clearInterval(repeater);
+						socket.emit('command', 'ctl-ds');
+					}
+					active = false;
+
+				}
+			}
 		});
 
 		</script>
